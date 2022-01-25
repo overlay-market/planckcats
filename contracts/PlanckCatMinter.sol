@@ -42,21 +42,26 @@ contract PlanckCatMinter is ERC721Holder {
     /// @notice claim planck cats by ID
     function claim(uint256[] memory ids) external {
         address _pcd = pcd;
+
         for (uint256 i=0; i < ids.length; i++) {
             uint256 id = ids[i];
-            if (claimable[id][msg.sender]) {
-                claimable[id][msg.sender] = false;
-                IPlanckCat(_pcd).safeTransferFrom(address(this), msg.sender, id, "");
-            }
+            // check can actually claim id
+            require(claimable[id][msg.sender], "!claimable");
+
+            // transfer escrowed to msg.sender
+            claimable[id][msg.sender] = false;
+            IPlanckCat(_pcd).safeTransferFrom(address(this), msg.sender, id, "");
         }
     }
 
     /// @notice check whether currentId is the ID of the next cat to be minted
     /// @dev IPlanckCat(_pcd)_tokenIdCounter.current() == currentId
     function isCurrentId(uint256 currentId) public returns (bool) {
-        string memory nonexistentReason = "ERC721Metadata: URI query for nonexistent token";
         address _pcd = pcd;
 
+        // Gameplan: tokenURI(currentId) should revert on call to PCD BUT
+        // tokenURI(currentId-1) should not IF isCurrentId(currentId) == true
+        string memory nonexistentReason = "ERC721Metadata: URI query for nonexistent token";
         try IPlanckCat(_pcd).tokenURI(currentId) returns (string memory) {
             // if URI already exists, then not the current id
             return false;
