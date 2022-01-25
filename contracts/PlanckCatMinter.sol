@@ -56,7 +56,7 @@ contract PlanckCatMinter is ERC721Holder {
 
     /// @notice check whether currentId is the ID of the next cat to be minted
     /// @dev IPlanckCat(_pcd)_tokenIdCounter.current() == currentId
-    function isCurrentId(uint256 currentId) public returns (bool) {
+    function isCurrentId(uint256 currentId) public view returns (bool) {
         address _pcd = pcd;
 
         // Gameplan: tokenURI(currentId) should revert on call to PCD BUT
