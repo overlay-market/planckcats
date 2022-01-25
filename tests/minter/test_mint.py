@@ -1,4 +1,12 @@
+import pytest
 from brownie import reverts
+
+
+# NOTE: Have fixture so current id from PFP token creation
+# starts back at 0 for each test
+@pytest.fixture(autouse=True)
+def isolation(fn_isolation):
+    pass
 
 
 def test_mint(minter, cat, alice, bob, rando, gov):
@@ -7,6 +15,7 @@ def test_mint(minter, cat, alice, bob, rando, gov):
     current_id = 0
 
     expect_balance = cat.balanceOf(minter)
+    expect_allowed_mint = minter.allowedMint()
 
     # mint pcds to this contract
     minter.mint(current_id, tos, uris, {"from": gov})
@@ -22,10 +31,17 @@ def test_mint(minter, cat, alice, bob, rando, gov):
     actual_balance = cat.balanceOf(minter)
     assert actual_balance == expect_balance
 
+    # check allowed mint decremented
+    expect_allowed_mint -= len(tos)
+    actual_allowed_mint = minter.allowedMint()
+    assert expect_allowed_mint == actual_allowed_mint
 
-def test_mint_reverts_when_not_minter(minter, rando):
+
+def test_mint_reverts_when_not_minter_role(minter, rando):
+    current_id = 0
     with reverts("!minter"):
-        _ = minter.mint(0, [rando], ["https://rando.lol"], {"from": rando})
+        _ = minter.mint(current_id, [rando], ["https://rando.lol"],
+                        {"from": rando})
 
 
 def test_mint_reverts_when_arrays_not_same_length(minter, gov, alice, bob):
@@ -44,3 +60,21 @@ def test_mint_reverts_when_not_current_id(minter, gov, alice, bob, rando):
 
     with reverts("!currentId"):
         _ = minter.mint(current_id, tos, uris, {"from": gov})
+
+
+def test_mint_reverts_when_greater_than_allowed(minter, gov, alice, bob,
+                                                rando):
+    current_id = 0
+
+    # minting one more than allowed should revert
+    num_mint = minter.allowedMint() + 1
+    tos = [alice for i in range(num_mint)]
+    uris = ["https://alice.lol/" for i in range(num_mint)]
+    with reverts("mint > max"):
+        _ = minter.mint(current_id, tos, uris, {"from": gov})
+
+    # minting exact amount allowed should not revert
+    num_mint = minter.allowedMint()
+    tos = [alice for i in range(num_mint)]
+    uris = ["https://alice.lol/" for i in range(num_mint)]
+    minter.mint(current_id, tos, uris, {"from": gov})
