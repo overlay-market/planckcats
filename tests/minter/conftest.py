@@ -38,7 +38,7 @@ def cat(create_cat):
     yield create_cat()
 
 
-@pytest.fixture(scope="module", params=[(604800, 3)])
+@pytest.fixture(scope="module", params=[(604800, 5)])
 def create_minter(gov, alice, cat, request):
     period, cap = request.param
 
