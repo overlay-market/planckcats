@@ -6,5 +6,6 @@ import "@openzeppelin/contracts/access/IAccessControl.sol";
 
 interface IPlanckCat is IERC721, IAccessControl {
     function safeMintCustom(address to, string memory _customURI) external;
+
     function tokenURI(uint256 tokenId) external view returns (string memory);
 }
