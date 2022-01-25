@@ -29,7 +29,11 @@ contract PlanckCatMinter is ERC721Holder {
     uint256 public allowedMint; // remaining PCD available to mint in periodMint
     uint256 public timestampPeriodLast; // start timestamp of current periodMint
 
-    constructor(address _pcd, uint256 _periodMint, uint256 _capMint) {
+    constructor(
+        address _pcd,
+        uint256 _periodMint,
+        uint256 _capMint
+    ) {
         require(_periodMint >= MIN_PERIOD_MINT, "periodMint < min");
         require(_periodMint <= MAX_PERIOD_MINT, "periodMint > max");
         require(_capMint <= MAX_CAP_MINT, "capMint > max");
