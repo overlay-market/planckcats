@@ -14,7 +14,7 @@ contract PlanckCatMinter is ERC721Holder {
         pcd = _pcd;
     }
 
-    modifier onlyMinter {
+    modifier onlyMinter() {
         require(IPlanckCat(pcd).hasRole(MINTER_ROLE, msg.sender), "!minter");
         _;
     }
@@ -24,12 +24,16 @@ contract PlanckCatMinter is ERC721Holder {
     /// @dev issues with ERC721 call back. After all are minted,
     /// @dev users can call claim() function. Technically the callback
     /// @dev shouldn't affect us given the onlyMinter modifier, but still.
-    function mint(uint256 currentId, address[] memory tos, string[] memory uris) external onlyMinter {
+    function mint(
+        uint256 currentId,
+        address[] memory tos,
+        string[] memory uris
+    ) external onlyMinter {
         require(tos.length == uris.length, "tos != uris");
         require(isCurrentId(currentId), "!currentId");
 
         address _pcd = pcd;
-        for (uint256 i=0; i < tos.length; i++) {
+        for (uint256 i = 0; i < tos.length; i++) {
             address to = tos[i];
             string memory uri = uris[i];
 
@@ -43,7 +47,7 @@ contract PlanckCatMinter is ERC721Holder {
     function claim(uint256[] memory ids) external {
         address _pcd = pcd;
 
-        for (uint256 i=0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             // check can actually claim id
             require(claimable[id][msg.sender], "!claimable");
@@ -72,7 +76,7 @@ contract PlanckCatMinter is ERC721Holder {
                 // currentId hasn't been minted yet. Now check that
                 // currentId - 1 has been minted, so we know currentId is the
                 // next ID
-                try IPlanckCat(_pcd).tokenURI(currentId-1) returns (string memory) {
+                try IPlanckCat(_pcd).tokenURI(currentId - 1) returns (string memory) {
                     // last minted ID was currentId-1, so currentId is actually the current id
                     return true;
                 } catch {}
