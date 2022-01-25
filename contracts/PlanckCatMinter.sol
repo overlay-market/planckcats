@@ -19,10 +19,11 @@ contract PlanckCatMinter is ERC721Holder {
         _;
     }
 
+    /// @notice mint new planck cats for claiming
     /// @dev mints to this planck cat minter contract first to avoid security
     /// @dev issues with ERC721 call back. After all are minted,
     /// @dev users can call claim() function. Technically the callback
-    /// @dev shouldn't affect us given the onlyMinter modifier
+    /// @dev shouldn't affect us given the onlyMinter modifier, but still.
     function mint(uint256 currentId, address[] memory tos, string[] memory uris) external onlyMinter {
         require(tos.length == uris.length, "tos != uris");
         require(isCurrentId(currentId), "!currentId");
@@ -38,6 +39,7 @@ contract PlanckCatMinter is ERC721Holder {
         }
     }
 
+    /// @notice claim planck cats by ID
     function claim(uint256[] memory ids) external {
         address _pcd = pcd;
         for (uint256 i=0; i < ids.length; i++) {
@@ -49,7 +51,7 @@ contract PlanckCatMinter is ERC721Holder {
         }
     }
 
-    /// @dev checks whether currentId is the ID of the next cat to be minted
+    /// @notice check whether currentId is the ID of the next cat to be minted
     /// @dev IPlanckCat(_pcd)_tokenIdCounter.current() == currentId
     function isCurrentId(uint256 currentId) public returns (bool) {
         string memory nonexistentReason = "ERC721Metadata: URI query for nonexistent token";
