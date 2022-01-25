@@ -1,0 +1,14 @@
+# use development as the default network
+networks:
+  default: development
+
+# require OpenZepplin Contracts
+dependencies:
+  - OpenZeppelin/openzeppelin-contracts@4.4.1
+
+# path remapping to support imports from GitHub/NPM
+compiler:
+  solc:
+    version: 0.8.7
+    remappings:
+      - "@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.4.1"
