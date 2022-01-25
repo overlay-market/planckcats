@@ -28,7 +28,7 @@ contract PlanckCat is ERC721, AccessControl {
         require(_exists(tokenId), "ERC721Metadata: URI query for nonexistent token");
 
         string memory baseURI = _uris[tokenId];
-        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+        return bytes(baseURI).length > 0 ? string(abi.encodePacked(baseURI, tokenId.toString(), ".json")) : "";
     }
 
     function safeMint(address to) public onlyRole(MINTER_ROLE) {
