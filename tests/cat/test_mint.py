@@ -1,6 +1,3 @@
-from brownie import reverts
-
-
 def test_safe_mint(cat, gov, alice):
     expect_balance = cat.balanceOf(alice)
 
