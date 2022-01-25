@@ -23,7 +23,7 @@ def test_mint(minter, cat, alice, bob, rando, gov):
     assert actual_balance == expect_balance
 
 
-def test_mint_reverts_when_not_minter(minter, rando):
+def test_mint_reverts_when_not_minter_role(minter, rando):
     with reverts("!minter"):
         _ = minter.mint(0, [rando], ["https://rando.lol"], {"from": rando})
 

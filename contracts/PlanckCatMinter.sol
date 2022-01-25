@@ -6,7 +6,18 @@ import "./interfaces/IPlanckCat.sol";
 
 contract PlanckCatMinter is ERC721Holder {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+
+    // param bounds
+    uint256 public constant MIN_PERIOD_MINT = 604800; // 7 days
+    uint256 public constant MAX_PERIOD_MINT = 7776000; // 90 days
+    uint256 public constant MAX_CAP_MINT = 50; // 50 cats
+
+    // planck cat NFT contract
     address public immutable pcd;
+
+    // events for param updates
+    event PeriodMintUpdated(address indexed user, uint256 _periodMint);
+    event CapMintUpdated(address indexed user, uint256 _capMint);
 
     mapping(uint256 => mapping(address => bool)) public claimable;
 
@@ -19,6 +30,10 @@ contract PlanckCatMinter is ERC721Holder {
     uint256 public timestampPeriodLast; // start timestamp of current periodMint
 
     constructor(address _pcd, uint256 _periodMint, uint256 _capMint) {
+        require(_periodMint >= MIN_PERIOD_MINT, "periodMint < min");
+        require(_periodMint <= MAX_PERIOD_MINT, "periodMint > max");
+        require(_capMint <= MAX_CAP_MINT, "capMint > max");
+
         pcd = _pcd;
         periodMint = _periodMint;
         capMint = _capMint;
@@ -118,11 +133,16 @@ contract PlanckCatMinter is ERC721Holder {
 
     /// @notice sets the mint period over which can bulk mint PCD
     function setPeriodMint(uint256 _periodMint) external onlyMinter {
+        require(_periodMint >= MIN_PERIOD_MINT, "periodMint < min");
+        require(_periodMint <= MAX_PERIOD_MINT, "periodMint > max");
         periodMint = _periodMint;
+        emit PeriodMintUpdated(msg.sender, _periodMint);
     }
 
     /// @notice sets the cap on number of PCD that can be bulk minted every periodMint
     function setCapMint(uint256 _capMint) external onlyMinter {
+        require(_capMint <= MAX_CAP_MINT, "capMint > max");
         capMint = _capMint;
+        emit CapMintUpdated(msg.sender, _capMint);
     }
 }
