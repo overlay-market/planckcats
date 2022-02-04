@@ -34,7 +34,7 @@ def test_mint_batch(minter, cat, alice, bob, rando, gov):
         assert minter.escrowed(to, 0) == i
 
         # NOTE: canClaim() tests in test_views.py
-        assert minter.canClaim({"from": to}) == [i]
+        assert minter.canClaim(to) == [i]
 
         # check count for number available to claim increased
         assert minter.count(to) == 1
@@ -68,7 +68,7 @@ def test_mint_batch_many_to_one(minter, cat, alice, bob, rando, gov):
 
     # check ids added to alice's escrowed
     # NOTE: canClaim() tests in test_views.py
-    assert minter.canClaim({"from": alice}) == expect_ids
+    assert minter.canClaim(alice) == expect_ids
 
     # check count increased by number minted for alice
     assert minter.count(alice) == expect_count
@@ -128,7 +128,7 @@ def test_mint_custom_batch(minter, cat, alice, bob, rando, gov):
         assert minter.escrowed(to, 0) == i
 
         # NOTE: canClaim() tests in test_views.py
-        assert minter.canClaim({"from": to}) == [i]
+        assert minter.canClaim(to) == [i]
 
         # check count for number available to claim increased
         assert minter.count(to) == 1
@@ -163,7 +163,7 @@ def test_mint_custom_batch_many_to_one(minter, cat, alice, bob, rando, gov):
 
     # check ids added to alice's escrowed
     # NOTE: canClaim() tests in test_views.py
-    assert minter.canClaim({"from": alice}) == expect_ids
+    assert minter.canClaim(alice) == expect_ids
 
     # check count increased by number minted for alice
     assert minter.count(alice) == expect_count

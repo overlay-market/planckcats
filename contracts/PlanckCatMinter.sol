@@ -141,16 +141,15 @@ contract PlanckCatMinter is ERC721Holder {
         return false;
     }
 
-    /// @notice returns IDs that can still be claimed by msg.sender
-    // TODO: test
-    function canClaim() external view returns (uint256[] memory can_) {
-        uint256[] memory ids = escrowed[msg.sender];
-        can_ = new uint256[](count[msg.sender]);
+    /// @notice returns IDs that can still be claimed for by
+    function canClaim(address by) external view returns (uint256[] memory can_) {
+        uint256[] memory ids = escrowed[by];
+        can_ = new uint256[](count[by]);
 
         uint256 idx;
         for (uint256 i=0; i < ids.length; i++) {
             uint256 id = ids[i];
-            if (claimable[id][msg.sender]) {
+            if (claimable[id][by]) {
                 can_[idx] = id;
                 idx++;
             }
