@@ -7,42 +7,13 @@ import "./interfaces/IPlanckCat.sol";
 contract PlanckCatMinter is ERC721Holder {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    // param bounds
-    uint256 public constant MIN_PERIOD_MINT = 604800; // 7 days
-    uint256 public constant MAX_PERIOD_MINT = 7776000; // 90 days
-    uint256 public constant MAX_CAP_MINT = 50; // 50 cats
-
     // planck cat NFT contract
     address public immutable pcd;
 
-    // events for param updates
-    event PeriodMintUpdated(address indexed user, uint256 _periodMint);
-    event CapMintUpdated(address indexed user, uint256 _capMint);
-
     mapping(uint256 => mapping(address => bool)) public claimable;
 
-    // onlyMinter params to limit PCDs that can be bulk minted within a period
-    uint256 public periodMint; // period over which bulk minting can occur
-    uint256 public capMint; // cap to number of PCD minted within periodMint
-
-    // dynamic quantities that change within the given mint period
-    uint256 public allowedMint; // remaining PCD available to mint in periodMint
-    uint256 public timestampPeriodLast; // start timestamp of current periodMint
-
-    constructor(
-        address _pcd,
-        uint256 _periodMint,
-        uint256 _capMint
-    ) {
-        require(_periodMint >= MIN_PERIOD_MINT, "periodMint < min");
-        require(_periodMint <= MAX_PERIOD_MINT, "periodMint > max");
-        require(_capMint <= MAX_CAP_MINT, "capMint > max");
-
+    constructor(address _pcd) {
         pcd = _pcd;
-        periodMint = _periodMint;
-        capMint = _capMint;
-        allowedMint = _capMint;
-        timestampPeriodLast = block.timestamp;
     }
 
     modifier onlyMinter() {
@@ -50,34 +21,41 @@ contract PlanckCatMinter is ERC721Holder {
         _;
     }
 
-    /// @notice refreshes allowed PCD to be bulk minted if one periodMint has passed
-    function refresh() public {
-        uint256 dt = block.timestamp - timestampPeriodLast;
-        if (dt >= periodMint) {
-            allowedMint = capMint;
-            timestampPeriodLast = block.timestamp;
-        }
-    }
-
-    /// @notice mint new planck cats for claiming
+    /// @notice bulk mint new planck cats for claiming
     /// @dev mints to this planck cat minter contract first to avoid security
     /// @dev issues with ERC721 call back. After all are minted,
     /// @dev users can call claim() function. Technically the callback
     /// @dev shouldn't affect us given the onlyMinter modifier, but still.
-    function mint(
+    function mintBatch(uint256 currentId, address[] memory tos) external onlyMinter {
+        require(isCurrentId(currentId), "!currentId");
+
+        // loop through and safe mint to this address. track who
+        // can claim which minted NFT thru claimable
+        address _pcd = pcd;
+        for (uint256 i = 0; i < tos.length; i++) {
+            address to = tos[i];
+
+            // mark as claimable
+            claimable[currentId][to] = true;
+            currentId++;
+
+            // mint to this address
+            IPlanckCat(_pcd).safeMint(address(this));
+        }
+    }
+
+    /// @notice bulk mint new custom planck cats for claiming
+    /// @dev mints to this planck cat minter contract first to avoid security
+    /// @dev issues with ERC721 call back. After all are minted,
+    /// @dev users can call claim() function. Technically the callback
+    /// @dev shouldn't affect us given the onlyMinter modifier, but still.
+    function mintCustomBatch(
         uint256 currentId,
         address[] memory tos,
         string[] memory uris
     ) external onlyMinter {
         require(tos.length == uris.length, "tos != uris");
         require(isCurrentId(currentId), "!currentId");
-
-        // refresh allowed mint amount if enough time has passed
-        refresh();
-
-        // check allowed to mint number of PCD specified
-        require(tos.length <= allowedMint, "mint > max");
-        allowedMint -= tos.length;
 
         // loop through and safe mint to this address. track who
         // can claim which minted NFT thru claimable
@@ -86,26 +64,25 @@ contract PlanckCatMinter is ERC721Holder {
             address to = tos[i];
             string memory uri = uris[i];
 
-            IPlanckCat(_pcd).safeMintCustom(address(this), uri);
+            // mark as claimable
             claimable[currentId][to] = true;
             currentId++;
+
+            // mint to this address
+            IPlanckCat(_pcd).safeMintCustom(address(this), uri);
         }
     }
 
-    /// @notice claim planck cats by ID
-    function claim(uint256[] memory ids) external {
+    /// @notice claim planck cat by ID
+    function claim(uint256 id) external {
         address _pcd = pcd;
 
-        // Loop thru and transfer all escrowed IDs user can claim
-        for (uint256 i = 0; i < ids.length; i++) {
-            uint256 id = ids[i];
-            // check can actually claim id
-            require(claimable[id][msg.sender], "!claimable");
+        // check can actually claim id
+        require(claimable[id][msg.sender], "!claimable");
 
-            // transfer escrowed to msg.sender
-            claimable[id][msg.sender] = false;
-            IPlanckCat(_pcd).safeTransferFrom(address(this), msg.sender, id, "");
-        }
+        // transfer escrowed to msg.sender
+        claimable[id][msg.sender] = false;
+        IPlanckCat(_pcd).safeTransferFrom(address(this), msg.sender, id, "");
     }
 
     /// @notice check whether currentId is the ID of the next cat to be minted
@@ -133,20 +110,5 @@ contract PlanckCatMinter is ERC721Holder {
             }
         }
         return false;
-    }
-
-    /// @notice sets the mint period over which can bulk mint PCD
-    function setPeriodMint(uint256 _periodMint) external onlyMinter {
-        require(_periodMint >= MIN_PERIOD_MINT, "periodMint < min");
-        require(_periodMint <= MAX_PERIOD_MINT, "periodMint > max");
-        periodMint = _periodMint;
-        emit PeriodMintUpdated(msg.sender, _periodMint);
-    }
-
-    /// @notice sets the cap on number of PCD that can be bulk minted every periodMint
-    function setCapMint(uint256 _capMint) external onlyMinter {
-        require(_capMint <= MAX_CAP_MINT, "capMint > max");
-        capMint = _capMint;
-        emit CapMintUpdated(msg.sender, _capMint);
     }
 }

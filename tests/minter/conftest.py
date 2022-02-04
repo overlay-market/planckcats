@@ -38,12 +38,10 @@ def cat(create_cat):
     yield create_cat()
 
 
-@pytest.fixture(scope="module", params=[(604800, 5)])
-def create_minter(gov, alice, cat, request):
-    period, cap = request.param
-
-    def create_minter(pcd=cat, period_mint=period, cap_mint=cap):
-        minter = gov.deploy(PlanckCatMinter, pcd, period_mint, cap_mint)
+@pytest.fixture(scope="module")
+def create_minter(gov, alice, cat):
+    def create_minter(pcd=cat):
+        minter = gov.deploy(PlanckCatMinter, pcd)
         pcd.grantRole(pcd.MINTER_ROLE(), minter, {"from": gov})
         return minter
 

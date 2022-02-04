@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/access/IAccessControl.sol";
 
 interface IPlanckCat is IERC721, IAccessControl {
+    function safeMint(address to) external;
+
     function safeMintCustom(address to, string memory _customURI) external;
 
     function tokenURI(uint256 tokenId) external view returns (string memory);
