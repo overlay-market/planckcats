@@ -40,6 +40,15 @@ def test_claim_after_mint_batch(minter, cat, gov, alice, bob, rando):
         # check to now owns the nft
         assert cat.ownerOf(id) == to
 
+        # check check count for number available to claim decreased
+        assert minter.count(to) == 0
+
+        # check claim event emitted
+        assert "Claim" in tx.events
+        assert len(tx.events["Claim"]) == 1
+        assert tx.events["Claim"]["by"] == to
+        assert tx.events["Claim"]["id"] == id
+
     # check balances after claim
     expect_balance_alice += 1
     expect_balance_bob += 1
@@ -54,6 +63,59 @@ def test_claim_after_mint_batch(minter, cat, gov, alice, bob, rando):
     assert expect_balance_alice == actual_balance_alice
     assert expect_balance_bob == actual_balance_bob
     assert expect_balance_rando == actual_balance_rando
+    assert expect_balance_minter == actual_balance_minter
+
+
+def test_claim_after_mint_batch_many_to_one(minter, cat, gov, alice, bob,
+                                            rando):
+    tos = [alice, alice, alice]
+    current_id = 0
+
+    # Mint the planck cats first
+    # NOTE: mintBatch() tests in test_mint.py
+    minter.mintBatch(current_id, tos, {"from": gov})
+
+    # prior balances to check against
+    expect_balance_alice = cat.balanceOf(alice)
+    expect_balance_minter = cat.balanceOf(minter)
+    expect_ids = [i for i in range(len(tos))]
+
+    # claim the NFTs
+    expect_count = minter.count(alice)
+    for i, id in enumerate(expect_ids):
+        tx = minter.claim(id, {"from": alice})
+
+        # check event of planck cat transfer
+        assert "Transfer" in tx.events
+        assert len(tx.events["Transfer"]) == 1
+        assert tx.events["Transfer"]["from"] == minter
+        assert tx.events["Transfer"]["to"] == alice
+        assert tx.events["Transfer"]["tokenId"] == id
+
+        # check no longer claimable
+        assert minter.claimable(id, alice) is False
+
+        # check to now owns the nft
+        assert cat.ownerOf(id) == alice
+
+        # check check count for number available to claim decreased
+        expect_count -= 1
+        assert minter.count(alice) == expect_count
+
+        # check claim event emitted
+        assert "Claim" in tx.events
+        assert len(tx.events["Claim"]) == 1
+        assert tx.events["Claim"]["by"] == alice
+        assert tx.events["Claim"]["id"] == id
+
+    # check balances after claim
+    expect_balance_alice += len(tos)
+    expect_balance_minter -= len(tos)
+
+    actual_balance_alice = cat.balanceOf(alice)
+    actual_balance_minter = cat.balanceOf(minter)
+
+    assert expect_balance_alice == actual_balance_alice
     assert expect_balance_minter == actual_balance_minter
 
 
@@ -89,6 +151,15 @@ def test_claim_after_mint_custom_batch(minter, cat, gov, alice, bob, rando):
         # check to now owns the nft
         assert cat.ownerOf(id) == to
 
+        # check check count for number available to claim decreased
+        assert minter.count(to) == 0
+
+        # check claim event emitted
+        assert "Claim" in tx.events
+        assert len(tx.events["Claim"]) == 1
+        assert tx.events["Claim"]["by"] == to
+        assert tx.events["Claim"]["id"] == id
+
     # check balances after claim
     expect_balance_alice += 1
     expect_balance_bob += 1
@@ -103,6 +174,60 @@ def test_claim_after_mint_custom_batch(minter, cat, gov, alice, bob, rando):
     assert expect_balance_alice == actual_balance_alice
     assert expect_balance_bob == actual_balance_bob
     assert expect_balance_rando == actual_balance_rando
+    assert expect_balance_minter == actual_balance_minter
+
+
+def test_claim_after_mint_custom_batch_many_to_one(minter, cat, gov, alice,
+                                                   bob, rando):
+    tos = [alice, alice, alice]
+    uris = ["https://alice.lol/", "https://alice.lol/", "https://alice.lol/"]
+    current_id = 0
+
+    # Mint the planck cats first
+    # NOTE: mintBatch() tests in test_mint.py
+    minter.mintCustomBatch(current_id, tos, uris, {"from": gov})
+
+    # prior balances to check against
+    expect_balance_alice = cat.balanceOf(alice)
+    expect_balance_minter = cat.balanceOf(minter)
+    expect_ids = [i for i in range(len(tos))]
+
+    # claim the NFTs
+    expect_count = minter.count(alice)
+    for i, id in enumerate(expect_ids):
+        tx = minter.claim(id, {"from": alice})
+
+        # check event of planck cat transfer
+        assert "Transfer" in tx.events
+        assert len(tx.events["Transfer"]) == 1
+        assert tx.events["Transfer"]["from"] == minter
+        assert tx.events["Transfer"]["to"] == alice
+        assert tx.events["Transfer"]["tokenId"] == id
+
+        # check no longer claimable
+        assert minter.claimable(id, alice) is False
+
+        # check to now owns the nft
+        assert cat.ownerOf(id) == alice
+
+        # check check count for number available to claim decreased
+        expect_count -= 1
+        assert minter.count(alice) == expect_count
+
+        # check claim event emitted
+        assert "Claim" in tx.events
+        assert len(tx.events["Claim"]) == 1
+        assert tx.events["Claim"]["by"] == alice
+        assert tx.events["Claim"]["id"] == id
+
+    # check balances after claim
+    expect_balance_alice += len(tos)
+    expect_balance_minter -= len(tos)
+
+    actual_balance_alice = cat.balanceOf(alice)
+    actual_balance_minter = cat.balanceOf(minter)
+
+    assert expect_balance_alice == actual_balance_alice
     assert expect_balance_minter == actual_balance_minter
 
 
