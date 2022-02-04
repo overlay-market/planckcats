@@ -10,7 +10,16 @@ contract PlanckCatMinter is ERC721Holder {
     // planck cat NFT contract
     address public immutable pcd;
 
+    // whether id is claimable by address
     mapping(uint256 => mapping(address => bool)) public claimable;
+    // ids that have been escrowed
+    mapping(address => uint256[]) public escrowed;
+    // number remaining to be claimed
+    mapping(address => uint256) public count;
+
+    // events
+    event Mint(address indexed to, uint256 id);
+    event Claim(address indexed by, uint256 id);
 
     constructor(address _pcd) {
         pcd = _pcd;
@@ -35,8 +44,15 @@ contract PlanckCatMinter is ERC721Holder {
         for (uint256 i = 0; i < tos.length; i++) {
             address to = tos[i];
 
-            // mark as claimable
+            // mark as claimable and record escrowed id
             claimable[currentId][to] = true;
+            escrowed[to].push(currentId);
+            count[to]++;
+
+            // emit mint event
+            emit Mint(to, currentId);
+
+            // increment current id counter
             currentId++;
 
             // mint to this address
@@ -64,8 +80,15 @@ contract PlanckCatMinter is ERC721Holder {
             address to = tos[i];
             string memory uri = uris[i];
 
-            // mark as claimable
+            // mark as claimable and record escrowed id
             claimable[currentId][to] = true;
+            escrowed[to].push(currentId);
+            count[to]++;
+
+            // emit mint event
+            emit Mint(to, currentId);
+
+            // increment current id counter
             currentId++;
 
             // mint to this address
@@ -80,8 +103,14 @@ contract PlanckCatMinter is ERC721Holder {
         // check can actually claim id
         require(claimable[id][msg.sender], "!claimable");
 
-        // transfer escrowed to msg.sender
+        // mark escrowed as claimed
         claimable[id][msg.sender] = false;
+        count[msg.sender]--;
+
+        // emit claim event
+        emit Claim(msg.sender, id);
+
+        // transfer escrowed to msg.sender
         IPlanckCat(_pcd).safeTransferFrom(address(this), msg.sender, id, "");
     }
 
@@ -110,5 +139,20 @@ contract PlanckCatMinter is ERC721Holder {
             }
         }
         return false;
+    }
+
+    /// @notice returns IDs that can still be claimed for by
+    function canClaim(address by) external view returns (uint256[] memory can_) {
+        uint256[] memory ids = escrowed[by];
+        can_ = new uint256[](count[by]);
+
+        uint256 idx;
+        for (uint256 i = 0; i < ids.length; i++) {
+            uint256 id = ids[i];
+            if (claimable[id][by]) {
+                can_[idx] = id;
+                idx++;
+            }
+        }
     }
 }
