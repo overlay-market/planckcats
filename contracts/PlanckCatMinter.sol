@@ -147,7 +147,7 @@ contract PlanckCatMinter is ERC721Holder {
         can_ = new uint256[](count[by]);
 
         uint256 idx;
-        for (uint256 i=0; i < ids.length; i++) {
+        for (uint256 i = 0; i < ids.length; i++) {
             uint256 id = ids[i];
             if (claimable[id][by]) {
                 can_[idx] = id;
