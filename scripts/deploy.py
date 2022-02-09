@@ -1,35 +1,34 @@
-import os
-import brownie.network as network, max_fee, priority_fee
+import click
+import brownie.network as network
+from brownie.network import max_fee, priority_fee
 from brownie import PlanckCat, PlanckCatMinter, Contract, accounts
 
 
-def get_args():
-    return {
-        "account": os.getenv('BROWNIE_ACCOUNT'),
-        "pcd": os.getenv('PCD')
-    }
-
-
 def check_if_not_pcd(add):
-    p = Contract.from_explorer(add)
+    try:
+        p = Contract.from_explorer(add)
+    except Exception as e:
+        print(e)
+        return True
+    
     if p.symbol() == 'PCD' and p.name() == 'PlanckCat':
         return False
     return True
 
 
 def main():
-    args = get_args()
-    deployer = accounts.load(args['account'])
-    pcd = args['pcd']
-    breakpoint()
-
+    account = click.prompt('Enter deployer account address: ')
+    pcd = click.prompt('Enter PlanckCat contract address: ')
+    deployer = accounts.load(account)
     if check_if_not_pcd(pcd):
-        return "Environment variable PCD does not point to PlanckCatDao NFT"
+        print("PlanckCat contract address is incorrect")
+        return
 
     if network.show_active() == "mainnet":
         priority_fee("2 gwei")
         max_fee("150 gwei")
 
+    breakpoint()
     return PlanckCatMinter.deploy(
         pcd,
         {"from": deployer},
