@@ -1,7 +1,7 @@
 import click
 import brownie.network as network
 from brownie.network import max_fee, priority_fee
-from brownie import PlanckCat, PlanckCatMinter, Contract, accounts
+from brownie import PlanckCatMinter, Contract, accounts
 
 
 def check_if_not_pcd(add):
@@ -10,7 +10,7 @@ def check_if_not_pcd(add):
     except Exception as e:
         print(e)
         return True
-    
+
     if p.symbol() == 'PCD' and p.name() == 'PlanckCat':
         return False
     return True
