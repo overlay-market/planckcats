@@ -3,7 +3,7 @@ import os
 import json
 import brownie.network as network
 from brownie.network import max_fee, priority_fee
-from brownie import PlanckCat, PlanckCatMinter, Contract, accounts
+from brownie import PlanckCatMinter, Contract, accounts
 
 
 def get_pcd_abi():
