@@ -28,7 +28,6 @@ def main():
         priority_fee("2 gwei")
         max_fee("150 gwei")
 
-    breakpoint()
     return PlanckCatMinter.deploy(
         pcd,
         {"from": deployer},
