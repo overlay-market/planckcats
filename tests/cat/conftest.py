@@ -25,14 +25,10 @@ def rando(accounts):
 @pytest.fixture(scope="module", params=["https://planckcat.lol/planckerella/"])
 def create_cat(gov, alice, bob, request):
     uri = request.param
-
-    def create_cat(default_uri=uri):
-        cat = gov.deploy(PlanckCat, uri)
-        return cat
-
-    yield create_cat
+    cat = gov.deploy(PlanckCat, uri)
+    yield cat
 
 
 @pytest.fixture(scope="module")
 def cat(create_cat):
-    yield create_cat()
+    yield create_cat
