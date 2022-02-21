@@ -23,12 +23,7 @@ def rando(accounts):
 
 
 @pytest.fixture(scope="module", params=["https://planckcat.lol/planckerella/"])
-def create_cat(gov, alice, bob, request):
+def cat(gov, alice, bob, request):
     uri = request.param
-    cat = gov.deploy(PlanckCat, uri)
-    yield cat
-
-
-@pytest.fixture(scope="module")
-def cat(create_cat):
-    yield create_cat
+    cat_contract = gov.deploy(PlanckCat, uri)
+    yield cat_contract
