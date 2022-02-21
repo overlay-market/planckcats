@@ -10,7 +10,7 @@ contract ReenterPlanckCatMinter is ERC721Holder {
     address minter;
     address deployer;
     Counters.Counter private _tokenIdCounter;
-    address[] public arr =  [msg.sender, msg.sender];
+    address[] public arr = [msg.sender, msg.sender];
 
     constructor(address _minter) {
         deployer = msg.sender;
@@ -34,7 +34,7 @@ contract ReenterPlanckCatMinter is ERC721Holder {
         if (_tokenIdCounter.current() == 2) {
             return this.onERC721Received.selector;
         }
-        /// attacker hopes to mint 2 more NFTs by re-entering here 
+        /// attacker hopes to mint 2 more NFTs by re-entering here
         PlanckCatMinter(minter).mintBatch(2, arr);
 
         return this.onERC721Received.selector;
