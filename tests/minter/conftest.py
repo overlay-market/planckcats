@@ -1,5 +1,5 @@
 import pytest
-from brownie import PlanckCat, PlanckCatMinter
+from brownie import PlanckCat, PlanckCatMinter, ReenterPlanckCatMinter
 
 
 @pytest.fixture(scope="module")
@@ -23,19 +23,10 @@ def rando(accounts):
 
 
 @pytest.fixture(scope="module", params=["https://planckcat.lol/planckerella/"])
-def create_cat(gov, alice, bob, request):
+def cat(gov, request):
     uri = request.param
-
-    def create_cat(default_uri=uri):
-        cat = gov.deploy(PlanckCat, uri)
-        return cat
-
-    yield create_cat
-
-
-@pytest.fixture(scope="module")
-def cat(create_cat):
-    yield create_cat()
+    cat_contract = gov.deploy(PlanckCat, uri)
+    yield cat_contract
 
 
 @pytest.fixture(scope="module")
@@ -51,3 +42,9 @@ def create_minter(gov, alice, cat):
 @pytest.fixture(scope="module")
 def minter(create_minter):
     yield create_minter()
+
+
+@pytest.fixture(scope="module")
+def attacc_minter(minter, alice):
+    # alice is the attacker that deploys a malicious contract
+    yield alice.deploy(ReenterPlanckCatMinter, minter)
