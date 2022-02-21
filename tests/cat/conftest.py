@@ -1,5 +1,5 @@
 import pytest
-from brownie import PlanckCat
+from brownie import PlanckCat, ReenterPlanckCat
 
 
 @pytest.fixture(scope="module")
@@ -23,7 +23,13 @@ def rando(accounts):
 
 
 @pytest.fixture(scope="module", params=["https://planckcat.lol/planckerella/"])
-def cat(gov, alice, bob, request):
+def cat(gov, request):
     uri = request.param
     cat_contract = gov.deploy(PlanckCat, uri)
     yield cat_contract
+
+
+@pytest.fixture(scope="module")
+def attacc(cat, alice):
+    # alice is the attacker that deploys a malicious contract
+    yield alice.deploy(ReenterPlanckCat, cat)

