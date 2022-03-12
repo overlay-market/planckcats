@@ -207,3 +207,17 @@ def test_mint_custom_batch_reverts_when_not_current_id(minter, gov, alice, bob,
 
     with reverts("!currentId"):
         _ = minter.mintCustomBatch(current_id, tos, uris, {"from": gov})
+
+
+def test_external_call_by_mint_batch_with_minter_role(cat, gov, minter,
+                                                      attacc_minter, alice):
+    # governance grants minter role to attacking contract
+    cat.grantRole(cat.MINTER_ROLE(), attacc_minter, {"from": gov})
+    # attacker tries a re-entrancy attack
+    attacc_minter.reenter({"from": alice})
+    # attacking contract hopes to have 4 NFTs:
+    # Two through reenter() + two through onERC721Received()
+    # but actually has 0, because all NFTs are minted to the minter itself
+    assert cat.balanceOf(attacc_minter) == 0
+    # Minter holds 2 NFTs only (not 4), cuz re-entry is not working/impossible
+    assert cat.balanceOf(minter) == 2
