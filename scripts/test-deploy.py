@@ -3,12 +3,15 @@ from brownie import interface
 from brownie import \
     PlanckCat, \
     PlanckCatMinter, \
-    accounts
+    accounts, \
+    Contract
 import os
 import json
 
-BOB = accounts.load('Bob')
+DEPLOYER = accounts.load('Bob')
 ADDRESSES = ['0x8e8b3e19717A5DDCfccce9Bf3b225E61efDD7937']
+PCD = "0xe356FBD8a927Eb1725116Ef56B6BB9c58392B75E"
+MINTER = "0x9ba2D3D2ED1a70ab7826978329DC04C6B1fbc888"
 
 
 def print_logs(tx):
@@ -16,29 +19,47 @@ def print_logs(tx):
         print(tx.events['log'][i]['k'] + ": " + str(tx.events['log'][i]['v']))
 
 
-def deploy_PCD():
-    pcd = BOB.deploy(
-        PlanckCat, "ipfs://QmXiTKKMxuLwTxQQpLvQkxunwuuhXpKEwow3CuLXy7LttM/")
-
-    return pcd
-
-
-def deploy_minter(tokenAddress):
-    minter = BOB.deploy(PlanckCatMinter, tokenAddress)
-
-    return minter
+def get_pcd_abi():
+    base = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base, 'constants/PlanckCatABI.json')
+    abi_file = open(path)
+    return json.load(abi_file)
 
 
-def mint_batch(currentId, addresses, minter, deployer):
-    mint = minter.mintBatch(currentId, addresses, {"from": deployer})
+def get_pcd_minter_abi():
+    base = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(base, 'constants/PlanckCatMinterABI.json')
+    abi_file = open(path)
+    return json.load(abi_file)
+
+
+def deploy_PCD(deployer):
+    return PlanckCat.deploy(
+        "ipfs://QmXiTKKMxuLwTxQQpLvQkxunwuuhXpKEwow3CuLXy7LttM/",
+        {"from": deployer},
+    )
+
+
+def deploy_minter(pcd, deployer):
+    return PlanckCatMinter.deploy(
+        pcd,
+        {"from": deployer},
+    )
+
+
+def mint_batch(currentId, addresses, minter, pcd):
+    mint = minter.mintBatch(currentId, addresses, {"from": pcd})
 
 
 def main():
-    pcd = deploy_PCD()
+    # pcd = deploy_PCD(DEPLOYER)
 
-    minter = deploy_minter(pcd)
+    # minter = deploy_minter(pcd, DEPLOYER)
+    pcd_abi = get_pcd_abi()
+    pcd_minter_abi = get_pcd_minter_abi()
 
-    print(pcd)
-    print(minter)
-    mint_batch(0, ADDRESSES, minter, BOB)
-    # minter = deploy_minter()
+    pcd = Contract.from_abi("PCD", PCD, pcd_abi)
+    pcd_minter = Contract.from_abi("Minter", MINTER, pcd_minter_abi)
+
+    # pcd.safeMint(DEPLOYER, {"from": DEPLOYER})
+    pcd_minter.mintBatch(2, ADDRESSES, {"from": DEPLOYER})
